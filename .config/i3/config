@@ -1,0 +1,312 @@
+# i3 config file (v4)
+#
+# Please see https://i3wm.org/docs/userguide.html for a complete reference!
+#
+# This config file uses keycodes (bindsym) and was written for the QWERTY
+# layout.
+#
+
+# Font for window titles. Will also be used by the bar unless a different font
+# is used in the bar {} block below.
+#font pango:monospace 8
+
+# This font is widely installed, provides lots of unicode glyphs, right-to-left
+# text rendering and scalability on retina/hidpi displays (thanks to pango).
+
+# Needed packages: 
+# xorg-xkill (for force end unresponsive windows),
+# xorg-setxkbmp (for setting keyboard language),
+# picom (An X compositor),
+
+font pango:DejaVu Sans Mono 8
+
+# >>>> Autostart <<<<
+
+exec_always --no-startup-id picom -b --config ~/.config/picom/picom.conf
+exec --no-startup-id setxkbmap -layout us,se,fr,il -option grp:win_space_toggle
+exec --no-startup-id exo-open --launch TerminalEmulator --colorscheme="Tango Light"
+exec --no-startup-id pulseaudio -D
+exec --no-startup-id chronyd
+exec_always --no-startup-id pkill asetroot;asetroot ~/.wallpapers/1366x768/demo -t 50
+exec_always --no-startup-id polybar_wrapper launch
+
+client.focused #6c71c4 #6c71c4 #fdf6e3 #6c71c4
+client.focused_inactive #073642 #073642 #eee8d5 #6c71c4
+client.unfocused #073642 #073642 #93a1a1 #586e75
+client.urgent #d33682 #d33682 #fdf6e3 #dc322f
+
+# -- i3 modes --
+
+# resize window (you can also use the mouse for that)
+mode "resize" {
+        # These bindings trigger as soon as you enter the resize mode
+
+        # Pressing left will shrink the window’s width.
+        # Pressing right will grow the window’s width.
+        # Pressing up will shrink the window’s height.
+        # Pressing down will grow the window’s height.
+        bindsym $Left       resize shrink width 10 px or 10 ppt
+        bindsym $Down       resize grow height 10 px or 10 ppt
+        bindsym $Up         resize shrink height 10 px or 10 ppt
+        bindsym $Right      resize grow width 10 px or 10 ppt
+
+        # same bindings, but for the arrow keys
+        bindsym Left        resize shrink width 10 px or 10 ppt
+        bindsym Down        resize grow height 10 px or 10 ppt
+        bindsym Up          resize shrink height 10 px or 10 ppt
+        bindsym Right       resize grow width 10 px or 10 ppt
+
+        # back to normal: Enter or Escape or $mod+r
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+        bindsym $mod+R mode "default"
+}
+
+  bindsym $mod+R mode "resize"
+
+
+set $wallpaper "/home/_ensamisten/.wallpapers/1366x768/t510.png"
+mode "i3-setup" {
+
+# Xfce Whisker Menu
+	bindsym W exec --no-startup-id xfce4-popup-whiskermenu
+# i3lock 
+	bindsym L exec --no-startup-id i3lock -i $wallpaper
+# Open options menu
+	bindsym $super+BackSpace exec --no-startup-id polybar_wrapper options
+
+
+# back to normal: Enter or Escape
+	bindsym Return mode "default"
+        bindsym Escape mode "default"
+
+}
+
+bindsym $mod+F1 mode "i3-setup"
+
+# -- Window Configurations --
+
+  focus_follows_mouse yes
+  focus_on_window_activation focus
+
+	# >>>> GUI Applications <<<<
+
+# Xfce 4
+
+assign [class="Xfdesktop" instance="xfdesktop" title="Desktop"] $ws1
+	for_window [class="Xfdesktop" instance="xfdesktop" title="Desktop"] $fd
+
+	for_window [class="Xfce4-settings-manager" title="Settings"] $fl
+
+	for_window [class="Preferences"] $fl
+
+	for_window [class="Xfce4-display-settings" instance="xfce4-display-settings" title="Display"] $fl, focus
+
+	for_window [class="Xfce4-panel" instance="xfce4-panel" title="Panel Preferences"] $fl
+
+	for_window [class="Xfce4-appfinder" instance="xfce4-appfinder" title="Application Finder"] $fl
+
+	for_window [class="Thunar" instance="Thunar"] $fl
+
+	for_window [window_role="About"] $fl
+
+	for_window [class="Xfce4-about"] $fl
+
+# i3 
+
+	for_window [class="i3-frame"] $fl, $f
+	for_window [class="i3_help"] $fl
+
+# Music players
+
+	for_window [class="Spotify" instance="spotify" title="Spotify"] $mvtw $ws8
+
+# Game Platforms
+
+	for_window [class="(i?)Steam"] $fl, $mvtw $ws5
+
+	for_window [class="Minecraft* 1.19" instance="Minecraft* 1.19" title="Minecraft* 1.19"] $mvtw $ws5
+  	for_window [class="Minecraft*" title="Minecraft"] $fl
+   	for_window [class="Minecraft Launcher" title="Minecraft Launcher"] $mvtw $ws4, $fd
+    	for_window [class="minecraft-launcher" title="minecraft-launcher"] $mvtw $ws4, $fd
+     	for_window [class="Minecraft" title="Minecraft"] $mvtw $ws4, $fd
+  #for_window [class="net-technicpack-launcher-LauncherMain" instance="net-technicpack-launcher-LauncherMain" title="Technic Launcher"] $fl
+
+# Misc
+
+	for_window [class="Conky" instance="Conky"] $fl
+	for_window [class="Pavucontrol"] $fl
+  	for_window [class="Gnome-disks" title="Disks"] $fl
+
+# Explicit Applications for Communication
+
+	for_window [class="Discord"] $ws5
+
+	for_window [class="zoom " instance="zoom " title="Zoom Cloud Meetings"] $fl
+  	for_window [class="zoom" title="Zoom - Free Account"] $fl
+   	for_window [class="zoom" title="Zoom Meeting"] $fd
+    	for_window [class="zoom" instance="zoom" title="Zoom Meeting"] $fl
+	for_window [class="zoom" instance="zoom" title="zoom"] $fl
+      	for_window [class="zoom" title="Settings"] $fl
+       	for_window [class="zoom" title="Blocked users"] $fl
+
+# >>>> Virtual Private Network >>>>
+
+  assign [class="Mullvad VPN" instance="mullvad vpn" title="Mullvad VPN"] $ws1
+	for_window [class="Mullvad VPN" instance="mullvad vpn" title="Mullvad VPN"] $fl, focus
+
+# <<<< Virtual Private Network <<<<
+
+# >>>> Terminal Emulator >>>>
+
+assign [class="terminology"] $ws2
+   	for_window [class="terminology"] $fl, focus
+
+# <<<< Terminal Emulator <<<<
+
+	for_window [class="vlc"] $fl
+
+assign [class="firefox"] $ws3
+	for_window [class="firefox"] focus
+    	for_window [class="firefox" instance="Places" title="Library" window_role="Organizer"] $fl
+     	for_window [class="firefox" instance="Browser" window_role="page-info"] $fl
+
+assign [class="Vivaldi-stable" instance="vivaldi-stable" window_role="browser"] $ws3
+
+	for_window [class="elementary_config" title="Elementary Config"] $fl
+	for_window [class="jetbrains-idea-ce" instance="jetbrains-idea-ce" title="Welcome to IntelliJ IDEA"] $fl
+  	for_window [class="jetbrains-idea-ce" instance="jetbrains-idea-ce" title="win91"] $fl, $mvtw $ws2
+	# Passwords
+  #for_window [title="Proton"] exec --no-startup-id xprop_passwords protonmail
+  #for_window [title="Sign"] exec --no-startup-id xprop_passwords github
+  #for_window [title="Logga"] exec --no-startup-id xprop_passwords blocket
+  #for_window [class="Pinentry-gtk-2"] 
+	# Others
+
+	for_window [window_type="dialog"] $fl, $f
+	for_window [window_role="task_dialog"] $fl, $f
+	for_window [window_role="pop-up"] $fl, $f
+	for_window [class="^.*"] border none, $f
+
+# >>>> Workspaces Configurations <<<< 
+
+# Define names for default workspaces for which we configure key bindings later on.
+# We use variables to avoid repeating the names in multiple places.
+
+ set $ws1 "1"
+ set $ws2 "2"
+ set $ws3 "3"
+ set $ws4 "4"
+ set $ws5 "5"
+ set $ws6 "6"
+ set $ws7 "7"
+ set $ws8 "8"
+ set $ws9 "9"
+ set $ws0 "10"
+
+# switch to workspace
+ bindsym $mod+1 workspace number $ws1
+ bindsym $mod+2 workspace number $ws2
+ bindsym $mod+3 workspace number $ws3
+ bindsym $mod+4 workspace number $ws4
+ bindsym $mod+5 workspace number $ws5
+ bindsym $mod+6 workspace number $ws6
+ bindsym $mod+7 workspace number $ws7
+ bindsym $mod+8 workspace number $ws8
+ bindsym $mod+9 workspace number $ws9
+ bindsym $mod+0 workspace number $ws0
+
+# move focused container to workspace
+ bindsym $mod+Shift+1 $mvctw number $ws1
+ bindsym $mod+Shift+2 $mvctw number $ws2
+ bindsym $mod+Shift+3 $mvctw number $ws3
+ bindsym $mod+Shift+4 $mvctw number $ws4
+ bindsym $mod+Shift+5 $mvctw number $ws5
+ bindsym $mod+Shift+6 $mvctw number $ws6
+ bindsym $mod+Shift+7 $mvctw number $ws7
+ bindsym $mod+Shift+8 $mvctw number $ws8
+ bindsym $mod+Shift+9 $mvctw number $ws9
+ bindsym $mod+Shift+0 $mvctw number $ws0
+
+# -- Gaps Feature --
+
+ gaps inner 16
+ gaps outer 40
+ hide_edge_borders smart
+ smart_gaps on
+
+# -- Variables --
+
+ set $fl floating enable
+ set $fd floating disable
+ set $mod Mod4
+ set $se sticky enable
+ set $sd sticky disable
+ set $f focus
+ set $mv move
+
+ set $mvtw move to workspace
+ set $mvctw move container to workspace
+
+floating_modifier $mod 
+
+# -- Keybindings --
+# Use pactl to adjust volume in PulseAudio.
+ bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +10%
+ bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -10%
+ bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
+ bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+# "
+ # bindcode 202 exec xfce4-session-logout
+	# Cycle through active workspaces
+bindsym $mod+Prior workspace next
+bindsym $mod+Next workspace prev
+	# i3lock # XF86ScreenSaver for laptop
+bindsym $mod+L exec i3lock -i /home/_md/Media/Formats/pngs/Space_Nebula.png
+
+	# delete the window
+bindsym --whole-window $mod+button2 exec i3-msg kill
+	# i3-gwc (i3-get-window-criteria) for ease of configurations
+bindsym --whole-window $mod+button8 exec i3-gwc
+	# rofi
+bindsym $mod+Q exec --no-startup-id rofi-appmenu
+
+# you can use the cursor keys:
+ bindsym $mod+Left focus left
+ bindsym $mod+Down focus down
+ bindsym $mod+Up focus up
+ bindsym $mod+Right focus right
+
+# you can use the cursor keys:
+ bindsym $mod+Shift+Left $mv left
+ bindsym $mod+Shift+Down $mv down
+ bindsym $mod+Shift+Up $mv up
+ bindsym $mod+Shift+Right $mv right
+
+# split in horizontal orientation
+ bindsym $mod+h split h
+
+# split in vertical orientation
+ bindsym $mod+v split v
+
+# enter fullscreen mode for the focused container
+ bindsym $mod+f fullscreen toggle
+
+# change container layout (stacked, tabbed, toggle split)
+ bindsym $mod+s layout stacking
+ bindsym $mod+w layout tabbed
+# bindsym $mod+e layout toggle split
+
+# toggle tiling / floating
+ bindsym $mod+Shift+C floating toggle
+
+# change focus between tiling / floating windows
+ bindsym $mod+d focus mode_toggle
+
+# move the currently focused window to the scratchpad
+ bindsym $mod+Shift+minus $mv scratchpad
+
+# Show the next scratchpad window or hide the focused scratchpad window.
+# If there are multiple scratchpad windows, this command cycles through them.
+ bindsym $mod+Tab scratchpad show
