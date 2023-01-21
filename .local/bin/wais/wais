@@ -1,0 +1,743 @@
+#!/usr/bin/env bash
+# WAIS (Windows Arch Installation Script)
+#
+# Unmodified script: https://github.com/rnln/alis [Licensed under CC0-1.0]
+# Arch/Windows(8.1) with Cryptsetup and BitLocker.
+# 
+# License:
+# CC0
+#
+
+# -e, Exit immediately if a command exits with a non-zero status.
+# -u, Treat unset variables as an error when substituting.
+set -eu
+
+# Don't use Unicode
+LC_ALL=C
+LANG=C
+
+#set -o errtrace # Enable the err trap, code will get called when an error is detected                                                 
+#trap "echo ERROR: There was an error in ${FUNCNAME-main context}, details to follow" ERR      
+
+function interactive_help() {
+		ES_WHITE=`tput setaf 7`
+		ES_RESET=`tput sgr0`
+		ES_BLUE=`tput setaf 4`
+cat <<EOF >&2
+
+	Windows Arch Installation Script
+
+Usage: 
+
+	1) exit		2) help		3) update	4) rescue	5) base		6) license 	7) post
+EOF
+}
+
+function cmdline_help() {
+		ES_WHITE=`tput setaf 7`
+		ES_RESET=`tput sgr0`
+		ES_BLUE=`tput setaf 4`
+cat <<EOF >&2
+
+	Windows Arch Installation Script
+
+Usage: 
+	wais [-h|help] [-L|license] [-u|update] [-r|rescue] [-i|install] [-d|drive]
+
+EOF
+exit 100
+}
+
+function invalid_option () {
+	cat <<-EOF >&2
+		[WAIS]: (❌️)invalid option '$@'.
+		Try run wais again without parameters for more information. 
+	EOF
+	exit 1
+}
+
+for option in "$@"; do
+	shift
+	case "$option" in
+		'help')     set -- "$@" '-h' ;;
+		'license')  set -- "$@" '-L' ;;
+		'update')   set -- "$@" '-u' ;;
+		'rescue')   set -- "$@" '-r' ;;
+		'install')  set -- "$@" '-i' ;;
+		'drive')    set -- "$@" '-d' ;;
+		*)  [ "$option" == --* ] && invalid_option "$option"
+			set -- "$@" "$option"
+	esac
+done
+
+pacman_mirroring_countries=(
+	'Austria'
+	'Belarus'
+	'Czechia'
+	'Denmark'
+	'Finland'
+	'Germany'
+	'Hungary'
+	'Latvia'
+	'Lithuania'
+	'Moldova'
+	'Norway'
+	'Poland'
+	'Romania'
+	'Russia'
+	'Slovakia'
+	'Sweden'
+	'Ukraine'
+)
+pacman_mirroring_countries=`printf ',%s' "${pacman_mirrors_countries[@]}" | cut -c 2-`
+
+t510_packages=(
+	'intel-ucode'
+	'extra/mobile-broadband-provider-info'
+	'modem-manager-gui'
+	'community/libnfc'
+	'bluez'
+	'xf86-input-synaptics'
+	'xf86-video-intel'
+	'libva-intel-driver'
+	'mesa'
+)
+
+icon_packages=(
+	'papirus-icon-theme'
+	'hicolor-icon-theme'
+	)
+
+font_packages=(
+	'ttf-jetbrains-mono'
+	'ttf-nerd-fonts-symbols-mono'
+	'noto-fonts'
+	'noto-fonts-emoji'
+	'noto-fonts-cjk'
+)
+
+aur_packages=(
+	'zoom'
+	'plymouth'
+	)
+
+essential_packages=(
+	'base'
+	'base-devel'
+	'linux-lts'
+	'linux-lts-headers'
+	'linux-firmware'
+	'lvm2'
+	'os-prober'
+	'mtools'
+	'ntfs-3g'
+	'dosfstools'	
+	)
+
+extra_packages=(
+	'extra/zbar'
+	'extra/zip'
+#	'extra/xorg-xwininfo'
+#	'xorg'
+#	'xorg-xinit'
+	'xdotool'
+	'lshw'
+	'mpv'
+	'ffmpeg'
+	'community/spotify-launcher'
+	'man'
+	'neovim'
+	'xdg-user-dirs'
+	'google-chrome'
+	'firefox'
+	'visual-studio-code-bin'
+	'terminology'
+	'p7zip'
+	'python-pip'
+	'qalculate-gtk'
+	'telegram-desktop'
+	'transmission-gtk'
+	'vlc'
+	'xcursor-openzone'
+	'youtube-dl'
+	'keepassxc'
+	'community/pass'
+	'community/pass-otp'
+	'fuse2'
+	'pkgfile'
+	'wl-clipboard'
+	'xclip'
+	'xsel'
+	'community/python-pysrt'
+	'community/scrot'
+	'feh'
+)
+
+network_packages=(
+	'wireguard-tools'
+	'curl'
+	'wget'
+	'networkmanager'
+	'wpa_supplicant'
+	'core/iputils'
+	'core/nfs-utils'
+	'inetutils'
+	'avahi'
+	)
+
+# >>>> Variables <<<<
+BELL=("tput bel")
+UPDATE_CONFIGURATION=false
+LICENSE=false
+INSTALL=false
+wais_drive='/dev/sda'
+RESCUE_SYSTEM=false
+arch_image=("neofetch -l")
+#vg_name=EnsamistenVG
+#boot_name=Encrypted_Boot
+#lvm_name=Encrypted_LVM_in_LUKS
+#init_key_file=("/etc/initcpio/keys/$HOSTNAME-BOOT.key")
+#boot_key_file=("/etc/initcpio/keys/$HOSTNAME-LVM.key")
+#uuid_mbr_boot=("sed -i s/%uuid%/$(blkid -o value -s UUID /dev/sda1) /etc/crypttab")
+
+OPTIND=1
+while getopts ':d:hLuir' option; do
+	case "$option" in
+		h) cmdline_help ;;
+		L) LICENSE=true ;;
+		u) UPDATE_CONFIGURATION=true ;;
+		r) RESCUE_SYSTEM=true ;;
+		i) INSTALL=true ;;
+		d) DRIVE="$OPTARG" ;;
+		?) invalid_option "$option"
+	esac
+done
+shift $((OPTIND-1))
+[ "${1:-}" = '--' ] && shift
+
+[ "$EUID" == 0 ] || SUDO=sudo
+CHROOT='arch-chroot /mnt'
+
+function setup_terminal_colors () {
+	# only use colors if connected to a terminal
+	if [ -t 1 ]; then
+		ES_BLACK=`tput setaf 0`
+		ES_RED=`tput setaf 1`
+		ES_GREEN=`tput setaf 2`
+		ES_YELLOW=`tput setaf 3`
+		ES_BLUE=`tput setaf 4`
+		ES_MAGENTA=`tput setaf 5`
+		ES_CYAN=`tput setaf 6`
+		ES_WHITE=`tput setaf 7`
+		ES_BOLD=`tput bold`
+		ES_RESET=`tput sgr0`
+	fi
+}
+
+function log () {
+	# log function
+	# -i <depth>  Add indent in message beggining
+	# -s          Print "Started ..." message
+	# -f          Print "Finished ..." message
+	# -n          Prevent line break
+	# -e          End message with provided string, '.' by default
+	# -w          Wrap message with provided escape sequence
+
+	local DEPTH=0
+	local FORMAT="$ES_BOLD"
+	local PADDING=''
+	local NEWLINE='\n'
+	local END='.'
+	local STATUS=''
+
+	local OPTIND=1
+	while getopts 'i:e:fnsw:' option; do
+		case "$option" in
+			i) DEPTH="$OPTARG" ;;
+			e) END="$OPTARG" ;;
+			w) FORMAT="${FORMAT}${OPTARG}" ;;
+			f) STATUS='(⛳️) Finished! ' ;;
+			s) STATUS='Started ' ;;
+			n) NEWLINE='' ;;
+		esac
+	done
+
+	shift $((OPTIND-1))
+	[ "${1:-}" = '' ] && shift
+
+	if [ $DEPTH -gt 0 ]; then
+		PADDING=$(printf "=%.0s" `seq $(($DEPTH * 2))`)
+		PADDING="${ES_CYAN}${PADDING}>${ES_RESET} "
+	fi
+
+	printf "${ES_BOLD}${ES_CYAN}[WAIS]${ES_RESET} ${PADDING}${STATUS}${FORMAT}$@${ES_RESET}${END}${NEWLINE}" >&2
+}
+
+function ask () {
+	# -i <depth>  Add indent in message beggining
+	# -n          Set 'no' as default answer
+
+	local indent=''
+	local question_ending="❓️ [${ES_BOLD}${ES_GREEN}Y${ES_RESET}|n] "
+	local result=1
+	local default_result=0
+
+	local OPTIND=1
+	while getopts 'i:n' option; do
+		case "$option" in
+			i) indent="-i $OPTARG" ;;
+			n) question_ending="❓️ [y|${ES_BOLD}${ES_RED}N${ES_RESET}] "
+			   default_result=1 ;;
+		esac
+	done
+
+	while true; do
+		log $indent -n -e "$question_ending" "$@"
+		read -e answer
+		case $answer in
+			'')
+				echo
+				result=$default_result
+				break ;;
+			[Yy]*)
+				result=0
+				break ;;
+			[Nn]*)
+				break ;;
+			*)
+				log $indent 'Try again'
+		esac
+	done
+	return $result
+}
+
+function setup_color_scheme () {
+	export BLACK='#121212'
+	export RED='#ff714f'
+	export GREEN='#00d965'
+	export YELLOW='#e0e000'
+	export BLUE='#7e9df9'
+	export MAGENTA='#ff5de1'
+	export CYAN='#90cbdb'
+	export WHITE='#ffffff'
+
+	export BLACK_BRIGHT='#7c7c7c'
+	export RED_BRIGHT=$RED
+	export GREEN_BRIGHT=$GREEN
+	export YELLOW_BRIGHT=$YELLOW
+	export BLUE_BRIGHT=$BLUE
+	export MAGENTA_BRIGHT=$MAGENTA
+	export CYAN_BRIGHT=$CYAN
+	export WHITE_BRIGHT=$WHITE
+
+	export FOREGROUND=$WHITE
+	export BACKGROUND=$BLACK
+	export BACKGROUND_HIGHLIGHT='#3298ff66'
+	export BACKGROUND_HIGHLIGHT_OPAQUE='#1f4871' # $BACKGROUND_HIGHLIGHT on #121212 background
+
+	export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
+	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$BACKGROUND_HIGHLIGHT_OPAQUE,$PALETTE'
+}
+
+function install_packages() {
+    pacman -Q paru &>/dev/null && command='paru' || command="$SUDO pacman"
+    $command -S --noconfirm --needed "$@"
+}
+
+function install_paru() {
+		install_packages base-devel git
+	local tempdir=`mktemp -d`
+	git clone https://aur.archlinux.org/paru-bin.git "$tempdir"
+	sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
+	rm -rf "$tempdir"
+}
+
+function waiser() {
+
+	log -e '' '>>>> [🛠️ ] WAIS Encryption Rescue [🛠️ ] >>>>'
+	log -e '' '>>>> Encrypted device <<<< '
+	if ask 'Windows'; then
+		log -n -e ' ' 'Where is your BitLocker Device?'
+		read bitlk_device
+		log -e '' ''$bitlk_device' is indeed a BitLocker Device.'
+		log -n -e ' ' 'Label:'
+		read bitlk_name
+	else
+		log -n -e '[/dev/sda1]: ' ''
+		read waiser_drive
+
+		if [ -L "/dev/mapper/$waiser_drive" ]; then
+			
+			log -e '' 'Name exists already.'
+			exit;
+		fi
+
+	log -e '' ">>>> Label <<<< "
+	log -n -e '[WAIS]: ' ''
+
+	read waiser_name
+
+		if [ -L "/dev/mapper/$waiser_name" ]; then
+			
+			log -e '' 'Name exists already.'
+			exit;
+		fi
+
+		cryptsetup open $waiser_drive $waiser_name
+	log -n -e '' 'Mounting WAIS Setup'
+		
+		if ask 'Mount '$waiser_lvm_name'-root?'; then
+			mount /dev/mapper/$waiser_lvm_name-root /mnt
+		fi
+		cryptsetup open /dev/$drive'2' $boot_name
+		mount /dev/mapper/$boot_name /mnt/boot
+		mount /dev/$drive'1' "/mnt/Windows8.1"
+		mount /dev/mapper/$lvm_name-home /mnt/home
+		swapon /dev/mapper/$lvm_name-swap
+	if ask 'Chroot into the Encrypted Arch System?'; then
+		$CHROOT		
+	fi			
+	fi
+
+}
+
+internet=("ping -c 1 archlinux.com")
+function update_configuration() {
+
+	if command -v pacman &>/dev/null; then
+		log -e '' '[🔑️] Ensure the keyring is properly initialized...'
+		$SUDO pacman-key --init &&
+		log -e '' '[🔐️] Reload the default keys onto our Arch System...'
+		$SUDO pacman-key --populate archlinux
+	fi
+
+		if ask -n 'Install MullvadVPN';then
+			debian/bin/mullvad-digger
+		fi
+
+	#log -s 'JAVA Configuration'
+	# Extend Large Pages Support for JVM on Linux
+	#echo 4096 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages	
+	#log -f 'JAVA Configuration'
+	
+	# XDG Base Directory specification
+	# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME"/.config}
+	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME"/.cache}
+	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME"/.local/share}
+	# Custom PATH:s
+	export PATH="$PATH:$(du "$HOME/.local/bin" "$HOME/.config/bash" | cut -f2 | tr '\n' ':' | sed 's/:*$//')"
+	# Exports of different kinds
+	export READER="zathura"
+	export STATUSBAR="polybar"
+	export TERMINAL="terminology"
+	export EDITOR="nvim"
+	export BROWSER="firefox"
+	export LESSHISTFILE="$XDG_CACHE_HOME"/lesshist
+	export VSCODE_PORTABLE="$XDG_DATA_HOME"/vscode
+	export CARGO_HOME="$XDG_DATA_HOME"/cargo
+	export GOPATH="$XDG_DATA_HOME"/go
+	export PYLINTHOME="$XDG_CACHE_HOME"/pylint
+	export GNUPGHOME="$XDG_CONFIG_HOME"./gnupg
+	export LF_ICONS="di=:fi=:ln=:or=:ex=:*.c=:*.cc=:*.clj=:*.coffee=:*.cpp=:*.css=:*.d=:*.dart=:*.erl=:*.exs=:*.fs=:	*.go=:*.h=:*.hh=:*.hpp=:*.hs=:*.html=:*.java=:*.jl=:*.js=:*.json=:*.lua=:*.md=:*.php=:*.pl=:*.pro=:*.py=:*.rb=:	*.rs=:*.scala=:*.ts=:*.vim=:*.cmd=:*.ps1=:*.sh=:*.bash=:*.zsh=:*.fish=:*.tar=:*.tgz=:*.arc=:*.arj=:*.taz=:*.lha=	:*.lz4=:*.lzh=:*.lzma=:*.tlz=:*.txz=:*.tzo=:*.t7z=:*.zip=:*.z=:*.dz=:*.gz=:*.lrz=:*.lz=:*.lzo=:*.xz=:*.zst=:*.tz	st=:*.bz2=:*.bz=:*.tbz=:*.tbz2=:*.tz=:*.deb=:*.rpm=:*.jar=:*.war=:*.ear=:*.sar=:*.rar=:*.alz=:*.ace=:*.zoo=:*.cp	io=:*.7z=:*.rz=:*.cab=:*.wim=:*.swm=:*.dwm=:*.esd=:*.jpg=:*.jpeg=:*.mjpg=:*.mjpeg=:*.gif=:*.bmp=:*.pbm=:*.pgm=:*	.ppm=:*.tga=:*.xbm=:*.xpm=:*.tif=:*.tiff=:*.png=:*.svg=:*.svgz=:*.mng=:*.pcx=:*.mov=:*.mpg=:*.mpeg=:*.m2v=:*.mkv=	:*.webm=:*.ogm=:*.mp4=:*.m4v=:*.mp4v=:*.vob=:*.qt=:*.nuv=:*.wmv=:*.asf=:*.rm=:*.rmvb=:*.flc=:*.avi=:*.fli=:*.flv	=:*.gl=:*.dl=:*.xcf=:*.xwd=:*.yuv=:*.cgm=:*.emf=:*.ogv=:*.ogx=:*.aac=:*.au=:*.flac=:*.m4a=:*.mid=:*.midi=:*.mka=	:*.mp3=:*.mpc=:*.ogg=:*.ra=:*.wav=:*.oga=:*.opus=:*.spx=:*.xspf=:*.pdf="
+	
+	log -s 'File/Protocol type handling'
+	xdg-mime default nvim.desktop text/edje
+	xdg-mime default nvim.desktop text/html
+	xdg-mime default nvim.desktop text/plain
+	xdg-mime default nvim.desktop application/x-shellscript
+	xdg-mime default Zoom.desktop x-scheme-handler/zoommtg
+}
+
+function install_base() {
+
+	log -s -w "$ES_CYAN" '>>>> Windows Arch Installation Script <<<<'
+
+		if ask 'Install Windows first'; then
+			echo "Run 'powercfg /h off' as an Administrator as soon as possible in Windows to disable hibernation and fast restart"
+			exit 100
+		else
+			echo No
+		fi
+
+		if ask -n 'Reset '$wais_drive''; then
+		log -s '>>>> badblocks >>>>'
+		badblocks -c 10240 -s -w -t random -v /dev/sda
+		log -f '<<<< badblocks <<<<'
+		log -s '>>>> dd >>>>'
+		dd if=/dev/urandom of=/dev/sda
+		log -f '<<<< dd <<<<'
+		fi
+	
+	log -s '>>>> [漣] getting user data >>>>'
+	log -n -i 1 -e ': ' '(1/7) Hostname [Network Configuration]'
+	read HOSTNAME
+	HOSTNAME=${HOSTNAME:-host}
+	while true; do
+		log -n -i 1 -e ': ' '(2/7) Root password [root]'
+		read -s ROOT_PASSWORD
+		echo
+		log -n -i 1 -e ': ' '(3/7) Retype root password [root]'
+		read -s ROOT_PASSWORD_CHECK
+		echo
+		if [ "$ROOT_PASSWORD" == "$ROOT_PASSWORD_CHECK" ]; then break; fi
+		log -i 1 -w "$ES_RED" 'Passwords do not match, try again'
+	done
+	ROOT_PASSWORD=${ROOT_PASSWORD:-root}
+	log -n -i 1 -e ': ' '(4/7) User full name [User]'
+	read USER_FULLNAME
+	USER_FULLNAME=${USER_FULLNAME:-User}
+	log -n -i 1 -e ': ' '(5/7) Username [user]'
+	read USER_USERNAME
+	USER_USERNAME=${USER_USERNAME:-user}
+	while true; do
+		log -n -i 1 -e ': ' '(6/7) User password [user]'
+		read -s USER_PASSWORD
+		echo
+		log -n -i 1 -e ': ' '(7/7) Retype user password [user]'
+		read -s USER_PASSWORD_CHECK
+		echo
+		if [ "$USER_PASSWORD" == "$USER_PASSWORD_CHECK" ]; then break; fi
+		log -i 1 -w "$ES_RED" 'Passwords do not match, try again'
+	done
+	USER_PASSWORD=${USER_PASSWORD:-user}
+	log -f '<<<< getting user data <<<<'
+
+	log -s '>>>> [⏳️] Updating...: the Arch Clock [⏳️] >>>>'
+		timedatectl set-ntp true
+	log -f '<<<< [⏳️] Updated...: the Arch Clock [⏳️] <<<<'
+
+		if ask 'Set up LUKS on LVM'; then 
+		log -s 'Initializing LUKS on LVM'
+			./arch/bin/luks-on-lvm
+		else 
+			echo "No LUKS on LVM"
+
+		fi
+
+	log -s '>>>> mirrors list updating >>>>'
+		reflector --fastest 5 --sort rate -c "$pacman_mirroring_countries" --protocol https --save /etc/pacman.d/mirrorlist
+	log -f '<<<< mirrors list updating <<<<'
+	
+	log -s '>>>> essential packages installation >>>>'
+
+	pacman -Syy
+	pacstrap /mnt "${essential_packages[@]}"
+
+	log -f '<<<< essential packages installation <<<<'
+	
+	log -s '>>>> Localization >>>>'
+		genfstab -U /mnt >>/mnt/etc/fstab
+		$CHROOT ln --force --symbolic /usr/share/zoneinfo/Europe/Stockholm /etc/localtime
+		$CHROOT hwclock --systohc
+		sed -i 's/^#\(\(en_US\)\.UTF-8 UTF-8\)/\1/' /mnt/etc/locale.gen
+		sed -i 's/^#\(\(en_US\)\ ISO-8859-1\)/\1/' /mnt/etc/locale.gen
+		$CHROOT locale-gen
+		echo "KEYMAP=us" > /mnt/etc/vconsole.conf
+		cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+	log -f '<<<< Localization <<<<'
+
+	log -s '>>>> Network configuring >>>>'
+		echo "$HOSTNAME" >/mnt/etc/hostname
+		echo '127.0.0.1 localhost' >/mnt/etc/hosts
+		echo '::1 localhost' >>/mnt/etc/hosts
+		echo "127.0.1.1 $HOSTNAME.localdomain $HOSTNAME" >>/mnt/etc/hosts
+		$CHROOT install_packages ${network_packages[@]}
+		$CHROOT systemctl enable NetworkManager 
+		$CHROOT systemctl enable wpa_supplicant
+	log -f '<<<< network configuring <<<<'
+
+	log -s 'users configuring'
+		ROOT_PASSWORD=$(openssl passwd -crypt ${ROOT_PASSWORD})
+		$CHROOT usermod --password ${ROOT_PASSWORD} root
+		USER_PASSWORD=$(openssl passwd -crypt ${USER_PASSWORD})
+		$CHROOT useradd -m -c "$USER_FULLNAME" -p "$USER_PASSWORD" -g users -G wheel "$USER_USERNAME"
+		$CHROOT pacman -S --noconfirm --needed sudo
+		sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
+	log -f 'users configuring'
+
+	log -f -w "$ES_CYAN" '<<<< [⛳️] Windows/Arch Installation Script [⛳️] <<<<'
+}
+
+function install_post () {
+	log -s 'Arch Linux Post Installation'
+
+	log -s '>>>> sudo timeout preventing >>>>'
+	command -v sudo >/dev/null 2>&1 || {
+		log -w "$ES_RED" "sudo isn't installed"
+		exit 1
+	}
+		log -s '>>>> Autologin >>>>'
+		sudo sh -c "cat <<-EOF >/etc/systemd/system/getty@tty1.service.d/override.conf
+		[Service]
+		ExecStart=
+		ExecStart=-/usr/bin/agetty --autologin $USER_USERNAME --noclear %I \$TERM
+		EOF"
+		log -f -e '' '<<<<< Autologin <<<<'
+
+		sudo sh -c "echo '$(whoami) ALL=(ALL) NOPASSWD: ALL' | (EDITOR='tee -a' visudo)" >/dev/null
+	log -f '<<<< sudo timeout preventing <<<<'
+
+	log -s '>>>> Pacman Configuring >>>>'
+		sudo pacman -Syyu --noconfirm --needed
+		install_packages reflector
+		sudo sh -c "cat <<-EOF >/etc/xdg/reflector/reflector.conf
+		--save /etc/pacman.d/mirrorlist
+		--protocol https
+		--country $pacman_mirroring_countries
+		--sort rate
+		--fastest 5
+		EOF"
+		sudo systemctl enable --now reflector.timer
+	log -f '<<<< Pacman Configuring <<<<'
+
+	log -s '>>>> Paru Installation >>>>'
+		install_paru
+	log -f '<<<< Paru Installation <<<<'
+
+	log -s '>>>> >>>>'
+		install_packages "${aur_packages[@]}"
+	log -f '<<<< >>>>'
+
+	log -s '>>>> Fonts Installation >>>>'
+		if ask 'Do we need font packages'; then
+		install_packages "${font_packages[@]}"
+		fi
+	log -f '<<<< Fonts Installation <<<<'
+
+	log -s '>>>> extra packages installation >>>>'
+		if ask 'Do we need extra packages'; then
+		install_packages "${extra_packages[@]}"
+		sudo systemctl enable --now pkgfile-update.timer
+		fi
+	log -f '<<<< extra packages installation <<<<'
+
+
+	is_t510=('neofetch model | grep 'T510'')
+	log -s '>>>> T510 installation packages >>>>'
+		if [ -z $is_t510 ]; then
+			if ask "We're on a T510. Install specific packages"; then
+				install_packages "${t510_packages[@]}"
+			fi
+	log -n -e '' 'System Check'
+			arch/bin/t510
+		fi
+			if ask '[漣] Xfce set up'; then
+				xfconf-query -c xfce4-session -p /sessions/Failsafe/Client1_Command -t string -sa i3 # xfwm4 -> i3
+				xfconf-query -c xfce4-session -p /sessions/Failsafe/Client0_Command -t string -sa xfsettingsd # xfwm4 -> i3
+			fi
+		if ask '[漣] Debug systemd'; then
+		systemd-analyze plot > SystemdAnalyzePlot.svg
+		fi
+
+	log -f -w "$ES_CYAN" '<<<< ⛳️ Arch Linux Post Installation ⛳️ <<<<'
+}
+
+setup_terminal_colors
+setup_color_scheme
+
+declare -a array=("exit" "help" "update" "rescue" "base" "license" "post")
+
+main() {
+
+	if [ $RESCUE_SYSTEM == true ]; then
+			clear
+			$arch_image
+			waiser
+			log -f -e '' ''
+			$BELL
+	else
+		if [ $LICENSE == true ]; then
+			clear
+			$arch_image
+			log -e '' -w "$ES_CYAN" 'License:'
+			log -e '' -w "$ES_CYAN" 'CC0-1.0'
+			exit 100
+		fi
+
+	if ping -c 1 archlinux.org &>/dev/null; then
+		log -s -e '' ''
+	else 	
+		log -e '' '[🌐️] No internet connection!'
+		if ask -n 'Continue anyway'; then
+			echo "Continuing without internet..."
+		else 
+			exit 100
+		fi
+	fi 
+
+	if [ $UPDATE_CONFIGURATION == true ]; then
+		clear
+		$arch_image
+		update_configuration
+		log -f -e '' ''
+		$BELL
+		exit 100
+	
+	else
+		if [ $INSTALL == true ]; then
+			clear
+			$arch_image
+			install_base
+			log -f -e '' ''
+			$BELL	
+
+		fi
+	fi
+		
+fi
+select i in ${array[@]}; do	
+
+			if [ "${i}" == 'exit' ]; then
+				clear
+				$arch_image
+				exit
+		else
+			if [ "${i}" == 'help' ]; then
+				clear
+				$arch_image
+				interactive_help
+		else
+			if [ "${i}" == 'update' ]; then
+				clear
+				$arch_image
+				update_configuration
+				log -f -e '' ''
+				$BELL
+		else
+			if [ "${i}" == 'rescue' ]; then
+				clear
+				$arch_image
+				log -s 'WAISER'
+				waiser
+				log -f -e '' ''
+				$BELL
+		else	
+			if [ ${i} == 'base' ]; then
+				clear
+				$arch_image
+				install_base
+				log -f -e '' ''
+				$BELL
+		else
+			if [ ${i} == 'license' ]; then
+				clear
+				$arch_image
+				log -e '' -w "$ES_CYAN" 'License:'
+				log -e '' -w "$ES_CYAN" 'CC0-1.0'
+		else	
+			if [ ${i} == 'post' ]; then
+				clear
+				$arch_image
+				install_post
+fi	
+	fi
+		fi
+
+	fi
+		fi
+	fi
+fi
+done
+}
+main "$@"
