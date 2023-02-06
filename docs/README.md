@@ -14,7 +14,7 @@
   - 📫 How to reach me ...
 
 ## Table of Contents
-- 1. [dotfiles](docs/dotfiles.md)
+- 1. [dotfiles](dotfiles.md)
 
 <!---
 Ensamisten/Ensamisten is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
