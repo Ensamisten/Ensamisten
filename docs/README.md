@@ -2,9 +2,9 @@
 
 > All code relinquished from copyright :copyright:
 
-> No smoking :no_smoking:
-
 > No littering :do_not_litter:
+
+> No smoking :no_smoking:
 
 ## Introduction
 👋 Hi, I’m @Ensamisten
