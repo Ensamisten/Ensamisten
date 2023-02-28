@@ -1,6 +1,6 @@
 ## Rules :mega:
 
-> All code relinquished from copyright :copyright:
+> All code relinquished from copyright under this profile
 
 > No littering :do_not_litter:
 
