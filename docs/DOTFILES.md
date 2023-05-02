@@ -1,3 +1,3 @@
 # DOTFILES
 
-* [archiso](../)
+* [archiso](../.local/share/archiso)
