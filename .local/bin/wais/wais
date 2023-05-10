@@ -467,6 +467,9 @@ function install_base() {
 		log -s '>>>> dd >>>>'
 		dd if=/dev/urandom of=/dev/sda
 		log -f '<<<< dd <<<<'
+		
+		else
+			echo "Not wiping drive"
 		fi
 	
 	log -s '>>>> [漣] getting user data >>>>'
