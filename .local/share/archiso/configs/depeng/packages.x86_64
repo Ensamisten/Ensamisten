@@ -1,4 +1,3 @@
-alsa-utils
 amd-ucode
 arch-install-scripts
 archinstall
@@ -11,14 +10,11 @@ btrfs-progs
 clonezilla
 cloud-init
 cryptsetup
-darkhttpd
 ddrescue
 dhclient
-dhcpcd
 diffutils
 dmidecode
 dmraid
-dnsmasq
 dosfstools
 e2fsprogs
 edk2-shell
@@ -29,7 +25,6 @@ exfatprogs
 f2fs-tools
 fatresize
 fsarchiver
-gnu-netcat
 gpart
 gpm
 gptfdisk
@@ -40,7 +35,6 @@ hyperv
 intel-ucode
 irssi
 iw
-iwd
 jfsutils
 kitty-terminfo
 less
@@ -64,21 +58,13 @@ memtest86+-efi
 mkinitcpio
 mkinitcpio-archiso
 mkinitcpio-nfs-utils
-modemmanager
 mtools
 nano
 nbd
 ndisc6
-nfs-utils
 nilfs-utils
-nmap
 ntfs-3g
 nvme-cli
-open-iscsi
-open-vm-tools
-openconnect
-openssh
-openvpn
 partclone
 parted
 partimage
@@ -88,10 +74,8 @@ pptpclient
 pv
 qemu-guest-agent
 refind
-reflector
 reiserfsprogs
 rp-pppoe
-rsync
 rxvt-unicode-terminfo
 screen
 sdparm
@@ -102,7 +86,6 @@ squashfs-tools
 sudo
 syslinux
 systemd-resolvconf
-tcpdump
 terminus-font
 testdisk
 tmux
@@ -113,11 +96,56 @@ usbmuxd
 usbutils
 vim
 virtualbox-guest-utils-nox
+xfce4
+xfce4-goodies
+xfsprogs
+xl2tpd
+
+# customization
+plymouth
+polybar
+
+# xorg
+xorg-server
+xorg-server-common
+
+# xfce4
+xfce4
+xfce4-goodies
+
+# i3
+
+i3-wm
+i3lock
+
+# terminal packages
+terminology
+zsh
+
+# networking packages
+tcpdump
+dhcpcd
+network-manager-applet
+iwd
 vpnc
+rsync
+dnsmasq
+darkhttpd
+nfs-utils
+reflector
+gnu-netcat
+nmap
+open-iscsi
+open-vm-tools
+openconnect
+openssh
+openvpn
+modemmanager
 wireless-regdb
 wireless_tools
 wpa_supplicant
 wvdial
-xfsprogs
-xl2tpd
-zsh
+
+# audio packages
+alsa-utils
+pulseaudio
