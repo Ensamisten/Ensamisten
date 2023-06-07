@@ -114,7 +114,6 @@ xfce4
 xfce4-goodies
 
 # i3
-
 i3-wm
 i3lock
 
@@ -149,3 +148,7 @@ wvdial
 # audio packages
 alsa-utils
 pulseaudio
+
+# browser
+firefox
+chromium
