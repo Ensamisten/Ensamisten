@@ -13,10 +13,12 @@ Terminal
 
 ## Usage
 
-```
 Two ways to use this archiso config
 
-1. Build the __entire__ .iso with updated packages. (typing mkarchiso -v . in a terminal)
-
-2. Download the prebuilt .iso from the root of the repository. (todo)
+1. Build the __entire__ .iso with updated packages.
+   
 ```
+mkarchiso -v .
+```
+
+3. Download the prebuilt .iso from the root of the repository. (todo)
