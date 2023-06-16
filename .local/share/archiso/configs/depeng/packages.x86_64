@@ -49,8 +49,8 @@ livecd-sounds
 lsscsi
 lvm2
 lynx
-man-db
-man-pages
+#man-db
+#man-pages
 mc
 mdadm
 memtest86+
@@ -133,13 +133,11 @@ darkhttpd
 nfs-utils
 reflector
 gnu-netcat
-nmap
 open-iscsi
 open-vm-tools
 openconnect
 openssh
 openvpn
-modemmanager
 wireless-regdb
 wireless_tools
 wpa_supplicant
