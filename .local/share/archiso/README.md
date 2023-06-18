@@ -4,12 +4,13 @@
 
 Browse the Web
 
-> Firefox,
-> Chromium
+> Firefox (Developer Edition)
 
 Terminal
 
 > Terminology
+
+* zsh
 
 ## Usage
 
