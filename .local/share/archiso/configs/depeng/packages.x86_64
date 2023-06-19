@@ -149,3 +149,7 @@ pulseaudio
 # browser packages
 lynx
 firefox-developer-edition
+
+# pass
+pass
+pass-otp
