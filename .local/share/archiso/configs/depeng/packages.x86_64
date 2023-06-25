@@ -101,8 +101,8 @@ xfsprogs
 xl2tpd
 
 # customization
-plymouth
-polybar
+#plymouth
+#polybar
 
 # xorg
 xorg-server
@@ -147,7 +147,6 @@ alsa-utils
 pulseaudio
 
 # browser packages
-lynx
 firefox-developer-edition
 
 # pass
