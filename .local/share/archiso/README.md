@@ -3,6 +3,7 @@
 # Todo
 * NetworkManager isn't automatically started
 * wpa_supplicant isn't automatically started
+* set default mimetypes for xfce4
 
 ## Features
 
