@@ -1,5 +1,9 @@
 # Archiso
 
+# Todo
+* NetworkManager isn't automatically started
+* wpa_supplicant isn't automatically started
+
 ## Features
 
 Browse the Web
