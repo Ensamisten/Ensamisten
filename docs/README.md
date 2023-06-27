@@ -6,4 +6,7 @@ Hi 👋, I’m @Ensamisten
   - 📫 How to reach me ...
 
 ## Table of Contents
-- 1. [dotfiles](DOTFILES.md)
+- 1.
+- 2.
+- 3.
+- 4.
