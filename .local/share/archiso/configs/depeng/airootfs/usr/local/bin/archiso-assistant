@@ -1,0 +1,31 @@
+#!/bin/bash
+# Author: agentgpt.reworkd.ai
+
+fetch() {
+# Specify the GitHub repository URL
+repository_url="https://github.com/Ensamisten/Ensamisten.git"
+
+# Specify the folder name to be downloaded
+folder_name=".local/share/archiso/configs/depeng"
+
+# Clone the repository to a temporary directory
+temp_dir=$(mktemp -d)
+git clone "$repository_url" "$temp_dir"
+
+# Move to the downloaded repository directory
+cd "$temp_dir"
+
+# Checkout only the specific folder
+git checkout HEAD -- "$folder_name"
+
+# Move the folder to the desired location
+mv "$folder_name" .
+
+# Clean up the temporary directory
+rm -rf "$temp_dir"
+}
+
+build() {
+  # todo: Specify the working directory
+    mkarchiso -v .
+}
