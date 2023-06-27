@@ -1,5 +1,5 @@
 ## Introduction
-👋 Hi, I’m @Ensamisten
+Hi 👋, I’m @Ensamisten
   - :eyes: I’m interested in Digital Transformation.:recycle:
   - 🌱 I’m currently learning GitHub :octocat:
   - 💞️ I’m looking to collaborate on ...
