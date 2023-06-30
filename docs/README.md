@@ -1,10 +1,7 @@
 ## Introduction
-<img align="right" src="img/reality.png">
+<img align="center" src="img/reality.png">
 
 Hi 👋, I’m @Ensamisten
-  - :eyes: I’m interested in
- <br> Digital Transformation.:recycle:
-  - 🌱 I’m currently learning
- <br> [archiso](https://wiki.archlinux.org/title/archiso)
-  - 💞️ I’m looking to collaborate on
- <br> GitHub :octocat:
+  - :eyes: Digital Transformation.:recycle:
+  - 🌱 [archiso](https://wiki.archlinux.org/title/archiso)
+  - 💞️ GitHub :octocat:
