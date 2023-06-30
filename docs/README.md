@@ -1,12 +1,10 @@
 ## Introduction
-Hi 👋, I’m @Ensamisten
-  - :eyes: I’m interested in Digital Transformation.:recycle:
-  - 🌱 I’m currently learning GitHub :octocat:
-  - 💞️ I’m looking to collaborate on ...
-  - 📫 How to reach me ...
+<img align="right" src="../img/reality.png">
 
-## Table of Contents
-- 1.
-- 2.
-- 3.
-- 4.
+Hi 👋, I’m @Ensamisten
+  - :eyes: I’m interested in
+ <br> Digital Transformation.:recycle:
+  - 🌱 I’m currently learning
+ <br> [archiso](https://wiki.archlinux.org/title/archiso)
+  - 💞️ I’m looking to collaborate on
+ <br> GitHub :octocat:
