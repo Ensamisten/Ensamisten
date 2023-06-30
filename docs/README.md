@@ -1,5 +1,5 @@
 ## Introduction
-<img align="right" src="main/img/reality.png">
+<img align="right" src="img/reality.png">
 
 Hi 👋, I’m @Ensamisten
   - :eyes: I’m interested in
