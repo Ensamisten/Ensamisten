@@ -1,7 +1,6 @@
 ## Introduction
-<img align="right" src="img/reality.png">
+<img align="right" src="../img/reality.png" width="512px" height="512px">
 
 Hi 👋, I’m @Ensamisten
-  - ♻️ Digital Transformation
-  - 🐧 [archiso](https://wiki.archlinux.org/title/archiso)
-  - :octocat: GitHub 
+  - I'm intersted in Digital Transformation ♻️ 
+  - I'm currently learning [archiso](https://wiki.archlinux.org/title/archiso) 🐧
