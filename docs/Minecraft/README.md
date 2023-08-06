@@ -15,7 +15,7 @@ Mod Loader is a generic term for a software component that facilitates the loadi
 
 ## File Structure
 
-- Blockstates: assets/minecraft/blockstates/
+- Blockstates: assets/minecraft/blockstates
 > Contains JSON files that define the model variants and states for blocks.
 - Fonts: assets/minecraft/font/
 > Contains TrueType font files for in-game text rendering.
@@ -32,7 +32,7 @@ Mod Loader is a generic term for a software component that facilitates the loadi
 - Shaders: assets/minecraft/shaders/
 > Contains shaders used for rendering effects.
 - Sounds: assets/minecraft/sounds/
-> Contains sounds used in the game.
+> Contains sounds used in the game. Uses the "**.ogg**" file format.
 - Textures: assets/minecraft/textures/
 > Contains the main textures used for blocks, items, and other in-game elements.
   - Colormap: assets/minecraft/textures/colormap/
