@@ -1,3 +1,4 @@
+
 # Java Modding Documentation for Minecraft
 
 ## Mod Loaders
@@ -14,6 +15,9 @@ Mod Loader is a generic term for a software component that facilitates the loadi
 > :memo:
 
 ## File Structure
+
+**Replace minecraft with your modid.**
+
 
 - Blockstates: assets/minecraft/blockstates
 > Contains JSON files that define the model variants and states for blocks.
