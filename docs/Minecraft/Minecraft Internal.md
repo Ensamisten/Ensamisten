@@ -27,8 +27,6 @@
 
 :memo: Resource Pack
 
-**Replace minecraft with your modid.**
-
 - Blockstates: assets/minecraft/blockstates
 > Contains JSON files that define the model variants and states for blocks.
 - Fonts: assets/minecraft/font/
