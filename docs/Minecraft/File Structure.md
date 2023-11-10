@@ -1,3 +1,5 @@
+<~ [Back](Minecraft%20Internal.md)
+
 # File Structure
 
 :memo: Game Directory
@@ -79,3 +81,5 @@
 > Contains images for the game's title screen.
   - Underwater: assets/minecraft/textures/underwater/
 > Contains images for underwater-related textures.
+
+<~ [Back](Minecraft%20Internal.md)
